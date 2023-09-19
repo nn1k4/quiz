@@ -1,6 +1,37 @@
 import Database from 'better-sqlite3';
 
-const db = new Database('./data/northwind.sqlite', { verbose: console.log });
+const db = new Database('./data/words.sqlite', { verbose: console.log });
+
+/* -------------------< Words >------------------- */
+
+export type Word = {
+	id: number;
+	word: string;
+	translation: string;
+	frequency: number;
+}
+
+export function getWordsCount(): number {
+	const stmt = db.prepare(`SELECT COUNT(*) as "cnt" FROM words`);
+	const data = stmt.get() as { cnt: number };
+	return data.cnt;
+}
+
+export function getWords({ offset = 0, limit = 50 }): QueryResult<Word[]> {
+	const stmt = db.prepare(`
+  SELECT id as "id"
+       , word as "word"
+       , translation as "translation"
+       , frequency as "frequency"
+    FROM words LIMIT $limit OFFSET $offset`);
+	const data = stmt.all({ limit, offset }) as Word[];
+
+	return {
+		data,
+		moreRows: getWordsCount() > offset + limit
+	};
+}
+/* -------------------< /Words >------------------- */
 
 export type Customer = {
 	id: string;
