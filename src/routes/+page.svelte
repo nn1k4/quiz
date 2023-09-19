@@ -8,7 +8,12 @@
 	let customers: Customer[] = [];
 	let words: Word[] = [];
 	
+	// Функция для преобразования unixepoch в формат datetime
+	function convertToDatetime(unixepochTime: number) {
 
+		const datetime = new Date(unixepochTime * 1000);
+		return datetime.toLocaleString("lv-LV", { hour12: false, timeZone: "UTC" }); // Вы можете изменить это согласно вашим потребностям
+	}
 
 
 
@@ -56,7 +61,11 @@
 
 {#each words as word}
 		<div>
-			Word: {word.word}: translation: {word.translation} frequency: {word.frequency}
+			<span  class="font-semibold" > {word.word} : {word.translation} </span> <br /> 
+			Trequency:  {word.frequency} <br /> 
+			Next_review_date:  {convertToDatetime(word.next_review_date)} <br />
+			Stage: {word.stage} <br />
+			<hr />
 		</div>
 	{/each} 
 </div>

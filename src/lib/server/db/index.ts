@@ -2,13 +2,15 @@ import Database from 'better-sqlite3';
 
 const db = new Database('./data/words.sqlite', { verbose: console.log });
 
-/* -------------------< Words >------------------- */
+/* -------------------< Word >------------------- */
 
 export type Word = {
 	id: number;
 	word: string;
 	translation: string;
 	frequency: number;
+	next_review_date: number;
+	stage: number;
 }
 
 export function getWordsCount(): number {
@@ -23,6 +25,8 @@ export function getWords({ offset = 0, limit = 50 }): QueryResult<Word[]> {
        , word as "word"
        , translation as "translation"
        , frequency as "frequency"
+	   , next_review_date as next_review_date
+	   , stage as stage
     FROM words LIMIT $limit OFFSET $offset`);
 	const data = stmt.all({ limit, offset }) as Word[];
 
@@ -31,7 +35,7 @@ export function getWords({ offset = 0, limit = 50 }): QueryResult<Word[]> {
 		moreRows: getWordsCount() > offset + limit
 	};
 }
-/* -------------------< /Words >------------------- */
+/* -------------------< /Word >------------------- */
 
 export type Customer = {
 	id: string;

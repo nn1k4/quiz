@@ -10,6 +10,8 @@ export const GET = (() => {
 			{ name: 'word', type: 'string' },
 			{ name: 'translation', type: 'string' },
 			{ name: 'frequency', type: 'number' },
+			{ name: 'next_review_date', type: 'number' },
+			{ name: 'stage', type: 'number' },
 		],
 		pkColumn: 'id'
 	};
