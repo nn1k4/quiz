@@ -2,6 +2,36 @@ import Database from 'better-sqlite3';
 
 const db = new Database('./data/words.sqlite', { verbose: console.log });
 
+/* -------------------< Stage >------------------- */
+
+export type Stage = {
+	id: number;
+	interval: string;
+}
+
+export function getStagesCount(): number {
+	const stmt = db.prepare(`SELECT COUNT(*) as "cnt" FROM stages`);
+	const data = stmt.get() as { cnt: number };
+	return data.cnt;
+}
+
+export function getStages({ offset = 0, limit = 50 }): QueryResult<Stage[]> {
+	const stmt = db.prepare(`
+  SELECT id as "id"
+       , interval as "interval"
+    FROM stages LIMIT $limit OFFSET $offset`);
+	const data = stmt.all({ limit, offset }) as Stage[];
+
+	return {
+		data,
+		moreRows: getStagesCount() > offset + limit
+	};
+}
+
+
+/* -------------------< /Stage >------------------- */
+
+
 /* -------------------< Word >------------------- */
 
 export type Word = {

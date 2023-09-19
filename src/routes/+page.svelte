@@ -1,13 +1,12 @@
 <script lang="ts">
-	import type { Customer, Word } from '$lib/server/db';
+	import type { Word, Stage } from '$lib/server/db';
 	import { runQuery, runStorageQuery } from '$lib/sqlite/dataApi';
 	import { waitTillStroageReady } from '$lib/sqlite/initStorages';
 	import { onMount } from 'svelte';
 	
 	let storageReady = false;
-	let customers: Customer[] = [];
 	let words: Word[] = [];
-	
+	let stages: Stage[] = [];
 	// Функция для преобразования unixepoch в формат datetime
 	function convertToDatetime(unixepochTime: number) {
 
@@ -20,9 +19,20 @@
 	onMount(async () => {
 		
 		await waitTillStroageReady('words_v1'); // ждем когда хранилище будет готово
+		await waitTillStroageReady('stages_v1'); // ждем когда хранилище будет готово
 		storageReady = true; // хранилище готово
 
-		words = (await runQuery('select * from words_v1 limit 10')) as Word[];
+		// words = (await runQuery('select * from words_v1 limit 10')) as Word[];
+		words = (await runQuery(`		
+			SELECT *
+			FROM words_v1 
+			WHERE next_review_date <= unixepoch(datetime('now', 'localtime')) 
+			OR next_review_date IS NULL
+			ORDER BY frequency DESC, next_review_date ASC
+			LIMIT 10;
+		`)) as Word[];
+
+		stages = (await runQuery('select * from stages_v1 limit 10')) as Stage[];
 
 		// customers = (await runQuery('select * from customers_v1 limit 10')) as Customer[];
 		
@@ -58,9 +68,22 @@
 
 <div>
 
+STAGES:
+<hr />
+{#each stages as stage}
+		<div>
+		
+			<span  class="font-semibold" > {stage.id} : {stage.interval} </span> <br /> 
+			
+		</div>
+{/each}
+<hr />
 
+WORDS:
 {#each words as word}
 		<div>
+			
+			<hr />
 			<span  class="font-semibold" > {word.word} : {word.translation} </span> <br /> 
 			Trequency:  {word.frequency} <br /> 
 			Next_review_date:  {convertToDatetime(word.next_review_date)} <br />
