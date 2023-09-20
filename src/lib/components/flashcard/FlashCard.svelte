@@ -1,114 +1,90 @@
 <script lang="ts">
-    import { onMount, onDestroy } from 'svelte';
-    import { words,  cursorStore, moveToNext, moveToPrev, resetCursor, setInitialArray  } from './store';
-    import type { Word, Stage } from '$lib/server/db';
-    import { runQuery } from '$lib/sqlite/dataApi';
-    import { waitTillStroageReady } from '$lib/sqlite/initStorages';
+	import { onMount, onDestroy } from 'svelte';
+	import type { Word, Stage } from '$lib/server/db';
+	import { runQuery } from '$lib/sqlite/dataApi';
+	import { waitTillStroageReady } from '$lib/sqlite/initStorages';
+	import {
+		useArrayCursor,
+		moveToNext,
+		moveToPrev,
+		resetCursor,
+		ArrayCursor
+	} from './hooks/use_shared_store';
+	import type { Writable } from 'svelte/store';
 
-    let storageReady = false;
-    let  loadedWords: Word[] = [];
-    let currentWord: Word | null = null;
-    let showTranslation = false;
-    let stages: Stage[] = [];
-
-    let cursor: Word | null = null;
-    cursorStore.subscribe($cursor => {
-      if ($cursor) {
-        cursor = $cursor.current();
-        }
-    });
-
-      // Инициализация массива из компонента
-  const initialWords: Word[] = [
-    { id: 1, word: "apple", translation: "яблоко", frequency: 5, next_review_date: 1633027200, stage: 1 },
-    { id: 2, word: "pear", translation: "груша", frequency: 4, next_review_date: 1633027211, stage: 2 },
-    // ... другие слова
-  ];
-  
-  setInitialArray(initialWords);
-
-    words.subscribe(value => {
-        console.log("Current state:", value); // вывожу в консоль состояние стора
-        // value.forEach((item, index) => {
-        // console.log(`Item ${index}:`, item);
-        // });
-    });
+	let storageReady = false;
+	let loadedWords: Word[] = [];
+	let showTranslation = false;
+	let stages: Stage[] = [];
 
 
-    onMount(async () => {
+	let localCursorStore: Writable<ArrayCursor> | null = null;
+	let cursor: Word | null = null;
+	let initialWords: Word[] = [];
 
-        await waitTillStroageReady('words_v1'); // ждем когда хранилище будет готово
-	      await waitTillStroageReady('stages_v1'); // ждем когда хранилище будет готово
-		    storageReady = true; // хранилища готовы
+	// Инициализация хранилища с пустым массивом (или каким-то начальным состоянием)
+	localCursorStore = useArrayCursor(initialWords);
 
-      
+	onMount(async () => {
+		await waitTillStroageReady('words_v1'); // ждем когда хранилище будет готово
+		await waitTillStroageReady('stages_v1'); // ждем когда хранилище будет готово
+		storageReady = true; // хранилища готовы
 
-        // Загрузка данных (эмуляция)
-        loadedWords  = (await runQuery(`		
-                SELECT *
-                FROM words_v1 
-                WHERE next_review_date <= unixepoch(datetime('now', 'localtime')) 
-                OR next_review_date IS NULL
-                ORDER BY frequency DESC, next_review_date ASC
-                LIMIT 10;
-            `)) as Word[];
-        words.set(loadedWords);
-  
-      // Установить первое слово
-      if (loadedWords.length > 0) {
-        currentWord = loadedWords[0];
-      }
-    });
+		// Загрузка данных (эмуляция)
+		const initialWords = (await runQuery(`		
+                  SELECT *
+                  FROM words_v1 
+                  WHERE next_review_date <= unixepoch(datetime('now', 'localtime')) 
+                  OR next_review_date IS NULL
+                  ORDER BY frequency DESC, next_review_date ASC
+                  LIMIT 10;
+              `)) as Word[];
 
-    onDestroy(() => {
-         words.set([]); 
-    });
-  
-    function nextWord() {
-        showTranslation = false;
+		// Обновление хранилища после получения данных
+		if (localCursorStore) {
+			// Добавьте эту проверку
+			localCursorStore.update((store) => {
+				if (store) {
+					// Эта проверка тоже будет полезной
+					store.array = initialWords;
+				}
+				return store;
+			});
+		}
+		if (localCursorStore) {
+			localCursorStore.subscribe(($cursor) => {
+				if ($cursor) {
+					cursor = $cursor.current();
+				}
+			});
+		}
+	});
 
-        // Достать следующее слово
-        const loadedWords = $words;
-        const next = loadedWords.shift();
-        if (next !== undefined) {
-            currentWord = next;
-        } else {
-            currentWord = null;  // или какое-то другое начальное значение
-        }
-        words.set(loadedWords);
-    }
+	function handleNext() {
+		if (localCursorStore) {
+			moveToNext(localCursorStore);
+		}
+	}
 
-    function handleKeyPress(event: KeyboardEvent) {
-      if (event.key === ' ') {
-        if (showTranslation) {
-          nextWord();
-        } else {
-          showTranslation = true;
-        }
-      }
-    }
-  </script>
-  
-  <svelte:window on:keydown={handleKeyPress} />
+	function handlePrev() {
+		if (localCursorStore) {
+			moveToPrev(localCursorStore);
+		}
+	}
 
-<button on:click={moveToPrev}>Previous</button>
-<button on:click={moveToNext}>Next</button>
-<button on:click={resetCursor}>Reset</button>
-<p>Current item: {cursor ? `Word: ${cursor.word}, Translation: ${cursor.translation}` : 'No current item'}</p>
+	function handleReset() {
+		if (localCursorStore) {
+			resetCursor(localCursorStore);
+		}
+	}
+</script>
 
-  <div>
-	Storage Ready: {storageReady ? 'true' : 'false'}
-  </div>
-  
-  {#if storageReady}
-    {#if currentWord}
-        <div>
-        <p>{showTranslation ? currentWord.translation : currentWord.word}</p>
-        </div>
-    {:else}
-        <div>
-        <p>Нет слов для отображения</p>
-        </div>
-    {/if}
-  {/if}
-  
+<button on:click={handleNext}>Next</button>
+<button on:click={handlePrev}>Previous</button>
+<button on:click={handleReset}>Reset</button>
+
+<p>
+	Current item: {cursor
+		? `Word: ${cursor.word}, Translation: ${cursor.translation}`
+		: 'No current item'}
+</p>
