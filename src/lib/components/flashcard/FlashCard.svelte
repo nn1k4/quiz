@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
-    import { words } from './store';
+    import { words,  cursorStore, moveToNext, moveToPrev, resetCursor, setInitialArray  } from './store';
     import type { Word, Stage } from '$lib/server/db';
     import { runQuery } from '$lib/sqlite/dataApi';
     import { waitTillStroageReady } from '$lib/sqlite/initStorages';
@@ -11,6 +11,21 @@
     let showTranslation = false;
     let stages: Stage[] = [];
 
+    let cursor: Word | null = null;
+    cursorStore.subscribe($cursor => {
+      if ($cursor) {
+        cursor = $cursor.current();
+        }
+    });
+
+      // Инициализация массива из компонента
+  const initialWords: Word[] = [
+    { id: 1, word: "apple", translation: "яблоко", frequency: 5, next_review_date: 1633027200, stage: 1 },
+    { id: 2, word: "pear", translation: "груша", frequency: 4, next_review_date: 1633027211, stage: 2 },
+    // ... другие слова
+  ];
+  
+  setInitialArray(initialWords);
 
     words.subscribe(value => {
         console.log("Current state:", value); // вывожу в консоль состояние стора
@@ -23,8 +38,8 @@
     onMount(async () => {
 
         await waitTillStroageReady('words_v1'); // ждем когда хранилище будет готово
-	    await waitTillStroageReady('stages_v1'); // ждем когда хранилище будет готово
-		storageReady = true; // хранилище готово
+	      await waitTillStroageReady('stages_v1'); // ждем когда хранилище будет готово
+		    storageReady = true; // хранилища готовы
 
       
 
@@ -75,6 +90,11 @@
   </script>
   
   <svelte:window on:keydown={handleKeyPress} />
+
+<button on:click={moveToPrev}>Previous</button>
+<button on:click={moveToNext}>Next</button>
+<button on:click={resetCursor}>Reset</button>
+<p>Current item: {cursor ? `Word: ${cursor.word}, Translation: ${cursor.translation}` : 'No current item'}</p>
 
   <div>
 	Storage Ready: {storageReady ? 'true' : 'false'}
