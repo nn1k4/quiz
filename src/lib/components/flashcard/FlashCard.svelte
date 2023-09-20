@@ -17,11 +17,10 @@
 	let showTranslation = false;
 	let stages: Stage[] = [];
 
-
 	let localCursorStore: Writable<ArrayCursor> | null = null;
 	let cursor: Word | null = null;
 	let initialWords: Word[] = [];
-  let unsubscribe: () => void;;  // Переменная для хранения функции отписки
+	let unsubscribe: () => void; // Переменная для хранения функции отписки
 	// Инициализация хранилища с пустым массивом (или каким-то начальным состоянием)
 	localCursorStore = useArrayCursor(initialWords);
 
@@ -52,10 +51,10 @@
 			});
 		}
 		if (localCursorStore) {
-			   unsubscribe = localCursorStore.subscribe(($cursor) => {
+			unsubscribe = localCursorStore.subscribe(($cursor) => {
 				if ($cursor) {
 					cursor = $cursor.current();
-          console.log('The current value is:', cursor);
+					console.log('The current value is:', cursor);
 				}
 			});
 		}
@@ -79,12 +78,12 @@
 		}
 	}
 
-  // Отписка при уничтожении компонента
-  onDestroy(() => {
-    if (unsubscribe) {
-      unsubscribe();
-    }
-  });
+	// Отписка при уничтожении компонента
+	onDestroy(() => {
+		if (unsubscribe) {
+			unsubscribe();
+		}
+	});
 </script>
 
 <button on:click={handleNext}>Next</button>
