@@ -1,5 +1,4 @@
 <script lang="ts">
-
 	// TODO Добавь ограничение когда мы подойдем к кону базы то есть больше не сможем взять слов из локальной таблице.
 	import { onMount, onDestroy } from 'svelte';
 	import type { Word, Stage, QueryResult } from '$lib/server/db';
@@ -21,15 +20,20 @@
 
 	let offset = 0;
 	let limit = 3;
-	let isEndReached = false; // текущая выборка слов закончилась
+	let isCursorEnd = false; // текущая выборка слов в курсоре закончилась
+	let isTableEnd = false; // слова в локальной таблице закончились
 	let localCursorStore: Writable<ArrayCursor> | null = null;
 	let cursor: Word | null = null;
 	let initialWords: Word[] = [];
 	let unsubscribe: () => void; // Переменная для хранения функции отписки
 	// Инициализация хранилища с пустым массивом (или каким-то начальным состоянием)
 	localCursorStore = useArrayCursor(initialWords);
-	let countWords: number; // количество слов в локальной базе
-	let moreRows: boolean = false; // ест ли еще записи для локальной таблицы
+	let countWords: number; // количество слов в локальной таблице
+	let moreRows: boolean = false; // ест ли еще записи в локальной таблице
+
+	async function updateLocalDatabase() {
+		console.log('Update local database...');
+	}
 
 	async function getWordsCount(): Promise<number> {
 		const res = await runQuery(`
@@ -43,11 +47,10 @@
 		if (moreRows) {
 			offset += limit; // Увеличиваем смещение на limit
 			await loadWords();
-		} 
+		}
 	}
 
 	async function loadWords() {
-
 		// Загрузка данных (эмуляция)
 		const initialWords = await getWords(limit, offset);
 
@@ -58,6 +61,9 @@
 					store.array = initialWords.data; // передаем массив слов в стор
 					store.index = 0; // обнуляем индекс курсора
 					moreRows = initialWords.moreRows; // есть ли еще записи в локальной таблице
+					if (!moreRows) {
+						isTableEnd = true; // дошли до конца локальной таблицы
+					}
 				}
 				return store;
 			});
@@ -92,11 +98,11 @@
 		if (localCursorStore) {
 			unsubscribe = localCursorStore.subscribe(($cursor) => {
 				if ($cursor) {
-					if ($cursor.index == limit - 1){
-						isEndReached = true;
+					if ($cursor.index == limit - 1) {
+						isCursorEnd = true;
 					} else {
-						isEndReached = false;
-					};
+						isCursorEnd = false;
+					}
 					cursor = $cursor.current();
 					console.log('The current value is:', cursor);
 				}
@@ -130,9 +136,16 @@
 	});
 </script>
 
-{#if isEndReached }
-    <p>Cards are over.</p><br />
-    <button on:click={loadMoreWords}>Learn more words</button><br />
+{#if isTableEnd}
+	<p>Local word database are over.</p>
+	<br />
+	<button on:click={updateLocalDatabase}>Update local database?</button><br />
+{/if}
+
+{#if isCursorEnd && !isTableEnd}
+	<p>Cards are over.</p>
+	<br />
+	<button on:click={loadMoreWords}>Learn more words</button><br />
 {/if}
 
 <button on:click={handleNext}>Next</button>
@@ -144,4 +157,3 @@
 		? `Word: ${cursor.word}, Translation: ${cursor.translation}`
 		: 'No current item'}
 </p>
-
