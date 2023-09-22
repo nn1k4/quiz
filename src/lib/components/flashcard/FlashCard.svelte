@@ -1,9 +1,9 @@
 <script lang="ts">
-	// TODO Добавь ограничение когда мы подойдем к кону базы то есть больше не сможем взять слов из локальной таблице.
 	import { onMount, onDestroy } from 'svelte';
 	import type { Word, Stage, QueryResult } from '$lib/server/db';
 	import { runQuery } from '$lib/sqlite/dataApi';
 	import { waitTillStroageReady } from '$lib/sqlite/initStorages';
+	import { updateWordsFromServer } from './util/updateWordsFromServer';
 	import {
 		useArrayCursor,
 		moveToNext,
@@ -33,6 +33,19 @@
 
 	async function updateLocalDatabase() {
 		console.log('Update local database...');
+		// здесь будем вызывать функцию которая будет обновлять локальную таблицу
+		// но те слова которые были просмотрены с интервальными метками будут сохранены при этом.
+		storageReady = false; // хранилища не готовы
+		await updateWordsFromServer(countWords, 'words_v1');
+		let newCountWords = await getWordsCount(); // новое количество слов в локальной таблице
+		//await waitTillStroageReady('words_v1'); // ждем когда хранилище будет готово
+		storageReady = true; // хранилище готово
+
+		isTableEnd = false;
+		// offset = 0; // если после обновления захотим вернуться назад
+		console.log(` В локальную таблицу загружено ${newCountWords - countWords} новых слов`);
+		countWords = newCountWords;
+		await loadWords(); // загружаем новые слова в стор
 	}
 
 	async function getWordsCount(): Promise<number> {
@@ -104,6 +117,12 @@
 						isCursorEnd = false;
 					}
 					cursor = $cursor.current();
+					// -- отладка
+					const stor = $cursor.array;
+					const index = $cursor.index;
+					console.log('The stor value is:', stor);
+					console.log('The index value is:', index);
+					// -- отладка
 					console.log('The current value is:', cursor);
 				}
 			});
@@ -134,7 +153,13 @@
 			unsubscribe();
 		}
 	});
+
+
 </script>
+
+<div>
+	Storage Ready: {storageReady ? 'true' : 'false'}
+</div>
 
 {#if isTableEnd}
 	<p>Local word database are over.</p>

@@ -18,7 +18,7 @@ export function handleQuery(msg: WorkerMessage<QueryRequestData>): QueryResponse
 		try {
 			db.transaction(() => {
 				data = db.selectObjects(msg.data.sql);
-				throw new Error('force rollback'); // здесь мы принудительно выполняем откат всех изменений в базе данных
+				// throw new Error('force rollback'); // здесь мы принудительно выполняем откат всех изменений в базе данных
 			});
 		} catch (err) {
 			if (getErrorMessage(err) !== 'force rollback') {

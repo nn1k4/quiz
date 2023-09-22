@@ -12,19 +12,19 @@ import {
 
 const storages = ['words_v1','stages_v1']; // в этом массиве указываем подключаемые таблицы
 
-async function getStructure(storage: string): Promise<TableStructure> {
+export async function getStructure(storage: string): Promise<TableStructure> {
 	const res = await fetch(`/api/data/${storage}/structure`);
 	const data = (await res.json()) as TableStructure;
 	return data;
 }
 
-async function getData(storage: string, offset: number, limit: number) {
+export async function getData(storage: string, offset: number, limit: number) {
 	const res = await fetch(`/api/data/${storage}/data?offset=${offset}&limit=${limit}`);
 	const data = (await res.json()) as { data: DataRow[]; moreRows: boolean };
 	return data;
 }
 
-async function createStorage(storage: string, structure: TableStructure) {
+export async function createStorage(storage: string, structure: TableStructure) {
 	const res = (await sendMsgToWorker({
 		storageId: storage,
 		type: WorkerMessageTypes.CREATE_TABLE,
@@ -68,7 +68,7 @@ async function fillStorage(storage: string, structure: TableStructure) {
 const readyStorages = new Set<string>(); // готовые хранилища
 const storageCbs = new Map<string, (() => void)[]>(); // карта хранилищь с  обратного вызовами  (callbacks)
 
-function storageIsReady(storageId: string) {
+export function storageIsReady(storageId: string) {
 	// помечает хранилище как "готовое" и выполняет все сохранённые
 	// обратные вызовы для этого хранилища. Эти вызовы удаляются после выполнения.
 	readyStorages.add(storageId);
