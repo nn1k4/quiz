@@ -5,22 +5,6 @@
 	// import { onMount } from 'svelte';
 	import FlashCard from '$lib/components/flashcard/FlashCard.svelte';
 	import InternetChecker from '$lib/components/offlineChecker/offlineChecker.svelte';
-	// Проверка Workera Offline/Online
-	const handleOfflineStatus = (event: CustomEvent<{ online: boolean }>) => {
-		if (event.detail.online) {
-			console.log('Worker: online');
-		} else {
-			console.log('Worker: offline');
-		}
-	};
-
-	const handleInternetStatus = (event: CustomEvent<{ online: boolean }>) => {
-		if (event.detail.online) {
-			console.log('Internet: available');
-		} else {
-			console.log('Internet: is not available');
-		}
-	};
 
 	const handleServerAccessStatus = (event: CustomEvent<{ online: boolean }>) => {
 		if (event.detail.online) {
@@ -81,8 +65,12 @@
 </script>
 
 <h1 class="text-5xl text-teal-500">SvelteKit Offline SQLite</h1>
-<InternetChecker on:offline-status={handleOfflineStatus} on:internet-status={handleInternetStatus} on:server-status={handleServerAccessStatus}/>
+<InternetChecker on:server-status={handleServerAccessStatus}/> 
 <FlashCard />
+
+
+
+
 <!--
 <div>
 	Storage Ready: {storageReady ? 'true' : 'false'}
