@@ -9,7 +9,10 @@
 		moveToNext,
 		moveToPrev,
 		resetCursor,
-		ArrayCursor
+		ArrayCursor,
+		currentTime,
+		convertToDatetime,
+		updateCurrentTime
 	} from './hooks/use_shared_store';
 	import type { Writable } from 'svelte/store';
 
@@ -30,9 +33,11 @@
 	localCursorStore = useArrayCursor(initialWords);
 	let countWords: number; // количество слов в локальной таблице
 	let moreRows: boolean = false; // ест ли еще записи в локальной таблице
+	let stopUpdateTime: () => void; // для остановки таймера часов в сторе
 
 	async function updateLocalDatabase() {
 		console.log('Update local database...');
+
 		// здесь будем вызывать функцию которая будет обновлять локальную таблицу
 		// но те слова которые были просмотрены с интервальными метками будут сохранены при этом.
 		storageReady = false; // хранилища не готовы
@@ -100,6 +105,7 @@
 	}
 
 	onMount(async () => {
+		stopUpdateTime = updateCurrentTime(); // запуск обновления текущего времени в сторе
 		await waitTillStroageReady('words_v1'); // ждем когда хранилище будет готово
 		await waitTillStroageReady('stages_v1'); // ждем когда хранилище будет готово
 		storageReady = true; // хранилища готовы
@@ -147,19 +153,26 @@
 		}
 	}
 
-	// Отписка при уничтожении компонента
+	// Отписки при уничтожении компонента
 	onDestroy(() => {
+		
+		if(stopUpdateTime){
+			stopUpdateTime(); // останавливаем таймер в сторе
+		}
+
 		if (unsubscribe) {
-			unsubscribe();
+			unsubscribe();  // отписывает компонент от обновлений хранилища localCursorStore
 		}
 	});
-
-
+	
 </script>
 
 <div>
 	Storage Ready: {storageReady ? 'true' : 'false'}
 </div>
+
+<p>Текущее время: {$currentTime} Unix epoch</p>
+<p>В формате datetime: {convertToDatetime($currentTime)}</p>
 
 {#if isTableEnd}
 	<p>Local word database are over.</p>

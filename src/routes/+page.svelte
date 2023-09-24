@@ -14,11 +14,7 @@
 		}
 	};
 
-	// Функция для преобразования unixepoch в формат datetime
-	function convertToDatetime(unixepochTime: number) {
-		const datetime = new Date(unixepochTime * 1000);
-		return datetime.toLocaleString('lv-LV', { hour12: false, timeZone: 'UTC' }); // Вы можете изменить это согласно вашим потребностям
-	}
+
 
 	// 	onMount(async () => {
 
@@ -65,6 +61,7 @@
 </script>
 
 <h1 class="text-5xl text-teal-500">SvelteKit Offline SQLite</h1>
+
 <InternetChecker on:server-status={handleServerAccessStatus}/> 
 <FlashCard />
 

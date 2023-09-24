@@ -39,6 +39,41 @@ export class ArrayCursor {
   }
 }
 
+// ------------------------------------Время
+
+// Writable стор для текущего UTC времени
+export const currentTime: Writable<number> = writable(Math.floor(Date.now() / 1000));
+
+// Функция для обновления текущего UTC времени каждую секунду
+// SQLITE: SELECT strftime('%s', 'now');
+export function updateCurrentTime() {
+  const intervalId = setInterval(() => {
+    currentTime.set(Math.floor(Date.now() / 1000));
+  }, 1000);
+  return () => clearInterval(intervalId); // функция для остановки интервала
+}
+
+// Функция для преобразования Unix epoch в формат datetime
+// SQLITE:  SELECT datetime('now', 'localtime');
+export function convertToDatetime(unixepochTime: number): string {
+  const datetime = new Date(unixepochTime * 1000);
+  return datetime.toLocaleString('lv-LV', {   
+  // day: "numeric",
+  // month: "long",
+  // year: "numeric",
+  // weekday: "long",
+  // hour: "numeric",
+  // minute: "numeric",
+  // second: "numeric",
+  // timeZoneName: "short",
+  hour12: false, timeZone: 'Europe/Riga' });
+}
+
+
+
+// ------------------------------------Время
+
+
 // Функции для управления курсором
 export function moveToNext(cursorStore: Writable<ArrayCursor>) {
   cursorStore.update(store => {
