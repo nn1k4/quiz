@@ -37,6 +37,16 @@ export class ArrayCursor {
   reset() {
     this.index = 0;
   }
+
+  //  метод для получения всего массива
+  getAll() {
+    return this.array;
+  }
+  
+  // метод для получения длины массива
+  length() {
+    return this.array.length;
+  }
 }
 
 // ------------------------------------Время
@@ -57,16 +67,17 @@ export function updateCurrentTime() {
 // SQLITE:  SELECT datetime('now', 'localtime');
 export function convertToDatetime(unixepochTime: number): string {
   const datetime = new Date(unixepochTime * 1000);
-  return datetime.toLocaleString('lv-LV', {   
-  // day: "numeric",
-  // month: "long",
-  // year: "numeric",
-  // weekday: "long",
-  // hour: "numeric",
-  // minute: "numeric",
-  // second: "numeric",
-  // timeZoneName: "short",
-  hour12: false, timeZone: 'Europe/Riga' });
+  return datetime.toLocaleString('lv-LV', {
+    // day: "numeric",
+    // month: "long",
+    // year: "numeric",
+    // weekday: "long",
+    // hour: "numeric",
+    // minute: "numeric",
+    // second: "numeric",
+    // timeZoneName: "short",
+    hour12: false, timeZone: 'Europe/Riga'
+  });
 }
 
 

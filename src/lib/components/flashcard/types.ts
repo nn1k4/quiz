@@ -1,0 +1,1 @@
+export type Stages = { id: number, interval: string }[];

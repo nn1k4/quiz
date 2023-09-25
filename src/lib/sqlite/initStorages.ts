@@ -10,7 +10,7 @@ import {
 	type FillStorageResponseData
 } from './types';
 
-const storages = ['words_v1','stages_v1']; // в этом массиве указываем подключаемые таблицы
+const storages = ['words_v1']; // в этом массиве указываем подключаемые таблицы
 
 export async function getStructure(storage: string): Promise<TableStructure> {
 	const res = await fetch(`/api/data/${storage}/structure`);
