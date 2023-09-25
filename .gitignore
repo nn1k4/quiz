@@ -129,4 +129,4 @@ dist
 #svelte-kit
 .svelte-kit/
 build/
-src/lib/sqlite/jswasm
+#src/lib/sqlite/jswasm
